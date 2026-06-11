@@ -42,7 +42,8 @@
     "publish": {
       "provider": "github",
       "owner": "juandl",
-      "repo": "skyveer"
+      "repo": "skyveer",
+      "releaseType": "release"
     }
   },
   "dependencies": {

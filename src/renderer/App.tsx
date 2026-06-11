@@ -149,11 +149,7 @@ const App = () => {
 
   return (
     <ModalsProvider>
-      <AppShell
-        header={{ height: 44 }}
-        navbar={{ width: 260, breakpoint: "xs" }}
-        padding={0}
-      >
+      <AppShell header={{ height: 44 }} navbar={{ width: 260, breakpoint: "xs" }} padding={0}>
         <AppShell.Header
           className="titlebar-drag"
           style={{ backgroundColor: "#0c1832", borderColor: "#1c2540" }}

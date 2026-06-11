@@ -20,11 +20,7 @@ const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 
 createRoot(rootElement).render(
-  <MantineProvider
-    theme={theme}
-    defaultColorScheme="auto"
-    colorSchemeManager={colorSchemeManager}
-  >
+  <MantineProvider theme={theme} defaultColorScheme="auto" colorSchemeManager={colorSchemeManager}>
     <Notifications position="bottom-right" />
     <App />
   </MantineProvider>,

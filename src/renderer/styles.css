@@ -1,0 +1,23 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.titlebar-drag {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Make borders sink into the navy background instead of standing out as bright blue */
+[data-mantine-color-scheme="dark"] {
+  --mantine-color-default-border: #1c2540;
+  --mantine-color-dark-4: #1c2540;
+}

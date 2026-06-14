@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Skyveer — Local cloud profile & MFA session manager (AWS, GCP, Azure)</title>
+<meta name="description" content="A sleek desktop app to manage cloud profiles, MFA logins, and session credentials, all locally on your machine. AWS today, with GCP, Azure, and more coming. Built with Electron and React." />
+<meta name="keywords" content="cloud credentials manager, AWS profile manager, MFA session manager, STS session token, GCP credentials, Azure credentials, multi-cloud, Electron desktop app, IAM, ~/.aws/credentials, developer tools" />
+<meta name="author" content="Skyveer" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Skyveer — Local cloud profile & MFA session manager" />
+<meta property="og:description" content="Manage cloud profiles, MFA logins, and session credentials locally. Starts with AWS, GCP, Azure, and more coming." />
+<meta property="og:image" content="https://raw.githubusercontent.com/juandl/skyveer/main/build/icon.png" />
+<meta property="og:url" content="https://juandl.github.io/skyveer/" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Skyveer — Local cloud profile & MFA session manager" />
+<meta name="twitter:description" content="Manage cloud profiles, MFA logins, and session credentials locally. Multi-cloud on the roadmap." />
+<meta name="twitter:image" content="https://raw.githubusercontent.com/juandl/skyveer/main/build/icon.png" />
+<link rel="canonical" href="https://juandl.github.io/skyveer/" />
+<meta name="theme-color" content="#0b0d10" />
+<link rel="icon" href="https://raw.githubusercontent.com/juandl/skyveer/main/build/icon.png" />
+<link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
+<style>
+  :root {
+    --bg: #0b0d10;
+    --bg-elev: #11141a;
+    --bg-card: #14181f;
+    --border: #1f242d;
+    --text: #e6e8eb;
+    --muted: #8a929c;
+    --accent: #ff9900;       /* AWS-ish orange */
+    --accent-2: #4f8cff;     /* electric blue */
+    --good: #3ddc84;
+    --radius: 14px;
+    --maxw: 1100px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+  body {
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(1100px 600px at 75% -10%, rgba(79,140,255,0.12), transparent 60%),
+      radial-gradient(900px 500px at 10% 10%, rgba(255,153,0,0.10), transparent 55%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  /* Nav */
+  nav.top {
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px 0;
+  }
+  .nav-links { display: flex; gap: 22px; color: var(--muted); font-size: 14px; }
+  .nav-links a { color: var(--muted); }
+  .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+  /* Hero */
+  header.hero { padding: 70px 0 50px; text-align: center; }
+  .hero-logo {
+    width: 96px; height: 96px; border-radius: 22px;
+    margin: 0 auto 28px;
+    display: block;
+    box-shadow:
+      0 20px 50px -10px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(255,255,255,0.04) inset;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px;
+    color: var(--muted); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(255,255,255,0.02);
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); box-shadow: 0 0 10px var(--good); }
+  h1 {
+    font-size: clamp(38px, 6vw, 64px);
+    line-height: 1.05;
+    margin: 22px 0 14px;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    background: linear-gradient(180deg, #ffffff 0%, #b9c0c9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: clamp(16px, 1.6vw, 19px);
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .sub b { color: var(--text); font-weight: 600; }
+
+  .cta { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 18px; border-radius: 10px; font-weight: 600; font-size: 14px;
+    border: 1px solid transparent; cursor: pointer; transition: transform .08s ease, background .15s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--accent); color: #1a1300; border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #ffae3a; text-decoration: none; }
+  .btn-ghost {
+    background: transparent; color: var(--text); border-color: var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg-elev); text-decoration: none; }
+
+  /* Hero screenshot */
+  .hero-shot {
+    margin: 56px auto 0;
+    max-width: 980px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    padding: 10px;
+    box-shadow:
+      0 30px 80px -20px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+  .hero-shot img { display: block; width: 100%; border-radius: calc(var(--radius) - 4px); }
+
+  /* Sections */
+  section { padding: 80px 0; }
+  .eyebrow {
+    color: var(--accent);
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700;
+  }
+  h2 {
+    font-size: clamp(28px, 3.5vw, 38px);
+    letter-spacing: -0.02em;
+    margin: 8px 0 14px;
+    font-weight: 700;
+  }
+  .lede { color: var(--muted); max-width: 680px; }
+
+  /* Feature grid */
+  .features {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-top: 36px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: #2a3140; transform: translateY(-2px); }
+  .card .ico {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(255,153,0,0.18), rgba(79,140,255,0.18));
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    font-size: 18px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* Screenshot strip */
+  .shots {
+    display: grid; gap: 18px; margin-top: 36px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .shot {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 8px;
+  }
+  .shot img { display: block; width: 100%; border-radius: 10px; }
+  .shot .label {
+    color: var(--muted); font-size: 12px; padding: 10px 6px 4px; text-align: center;
+  }
+  @media (max-width: 760px) { .shots { grid-template-columns: 1fr; } }
+
+  /* How it works */
+  .steps { display: grid; gap: 16px; margin-top: 36px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .step { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; position: relative; }
+  .step .n {
+    position: absolute; top: -12px; left: 18px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #1a1300; font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    border: 3px solid var(--bg);
+  }
+  .step h4 { margin: 4px 0 6px; font-size: 15px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* Download */
+  .downloads {
+    margin-top: 36px;
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .dl {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    text-align: center;
+    transition: border-color .15s, transform .15s;
+  }
+  .dl:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
+  .dl .os { display: flex; justify-content: center; align-items: center; height: 40px; }
+  .dl .os img { width: 36px; height: 36px; object-fit: contain; transition: transform .15s, filter .15s; }
+  .dl:hover .os img { transform: scale(1.08); }
+  .dl .name { font-weight: 700; margin-top: 10px; color: var(--text); }
+  .dl .kind { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  @media (max-width: 760px) { .downloads { grid-template-columns: 1fr; } }
+
+  /* Security callout */
+  .callout {
+    background: linear-gradient(180deg, rgba(61,220,132,0.06), rgba(61,220,132,0.02));
+    border: 1px solid rgba(61,220,132,0.25);
+    border-radius: var(--radius);
+    padding: 24px 26px;
+    display: flex; gap: 18px; align-items: flex-start;
+    margin-top: 24px;
+  }
+  .callout .ico { font-size: 22px; }
+  .callout h3 { margin: 0 0 4px; font-size: 16px; }
+  .callout p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 36px 0 60px;
+    color: var(--muted);
+    font-size: 13px;
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--text); }
+  .disclaimer {
+    flex-basis: 100%;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="top">
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#upcoming">Roadmap</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/juandl/skyveer" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <img class="hero-logo" src="https://raw.githubusercontent.com/juandl/skyveer/main/build/icon.png" alt="Skyveer" />
+      <span class="badge"><span class="dot"></span> Open source · Electron · 100% local</span>
+      <h1>AWS profiles &amp; MFA sessions,<br/>managed locally.</h1>
+      <p class="sub">
+        Skyveer is a tiny desktop app for juggling AWS profiles, requesting
+        <b>STS session tokens</b> with MFA, and writing them into
+        <code>~/.aws/credentials</code> without ever leaving your machine.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/juandl/skyveer/releases/latest" target="_blank" rel="noopener">
+          ⬇ Download latest
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/juandl/skyveer" target="_blank" rel="noopener">
+          ★ Star on GitHub
+        </a>
+      </div>
+
+      <div class="hero-shot">
+        <img src="https://raw.githubusercontent.com/juandl/skyveer/main/public/capture-1.png" alt="Skyveer profile list" />
+      </div>
+    </header>
+
+    <section id="features">
+      <span class="eyebrow">Features</span>
+      <h2>Everything you need, nothing you don't.</h2>
+      <p class="lede">Built for engineers who switch AWS accounts a dozen times a day and want MFA without the shell gymnastics.</p>
+
+      <div class="features">
+        <div class="card">
+          <div class="ico">🔑</div>
+          <h3>Profile management</h3>
+          <p>Add, edit, and delete IAM profiles, access keys, MFA device ARN, region, and label.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🔐</div>
+          <h3>MFA / OTP login</h3>
+          <p>Enter your 6-digit code and Skyveer calls <code>sts:GetSessionToken</code> for you.</p>
+        </div>
+        <div class="card">
+          <div class="ico">⭐</div>
+          <h3>Default profile</h3>
+          <p>Mark any profile as default, it auto-writes to the <code>[default]</code> credentials section.</p>
+        </div>
+        <div class="card">
+          <div class="ico">📡</div>
+          <h3>Session tracking</h3>
+          <p>Active / expired status verified live via <code>sts:GetCallerIdentity</code>.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🔄</div>
+          <h3>Credential sync</h3>
+          <p>Writes both <code>~/.aws/credentials</code> and <code>~/.aws/config</code> on every login.</p>
+        </div>
+        <div class="card">
+          <div class="ico">⏱️</div>
+          <h3>12-hour sessions</h3>
+          <p>Sensible defaults, requests STS tokens with a 12-hour duration so you can focus on shipping.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <span class="eyebrow">A peek inside</span>
+      <h2>Clean, dark, out of your way.</h2>
+      <div class="shots">
+        <div class="shot">
+          <img src="https://raw.githubusercontent.com/juandl/skyveer/main/public/capture-1.png" alt="Profile list" />
+          <div class="label">Profile list</div>
+        </div>
+        <div class="shot">
+          <img src="https://raw.githubusercontent.com/juandl/skyveer/main/public/capture-2.png" alt="Add profile" />
+          <div class="label">Add profile</div>
+        </div>
+        <div class="shot">
+          <img src="https://raw.githubusercontent.com/juandl/skyveer/main/public/capture-3.png" alt="Login with MFA" />
+          <div class="label">Login with MFA</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <span class="eyebrow">How it works</span>
+      <h2>From zero to authenticated in four clicks.</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <h4>Add a profile</h4>
+          <p>Drop in your IAM keys, MFA device ARN, region, and a friendly name.</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h4>Enter your OTP</h4>
+          <p>Skyveer calls <code>sts:GetSessionToken</code> and writes temporary creds locally.</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h4>Use the AWS CLI</h4>
+          <p>Run <code>aws --profile &lt;name&gt;</code> or nothing at all if it's your default.</p>
+        </div>
+        <div class="step">
+          <div class="n">4</div>
+          <h4>Logout when done</h4>
+          <p>One click wipes the session from <code>~/.aws/credentials</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="upcoming">
+      <span class="eyebrow">Upcoming</span>
+      <h2>More than just AWS.</h2>
+      <p class="lede">Skyveer started with AWS, but it's built to grow. Here's what's next on the roadmap.</p>
+
+      <div class="features">
+        <div class="card">
+          <div class="ico">☁️</div>
+          <h3>More cloud providers</h3>
+          <p>Bring profile + session management beyond AWS, <b>GCP</b>, <b>Azure</b>, and friends.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🗂️</div>
+          <h3>Workspaces</h3>
+          <p>Group profiles by project, team, or environment so context-switching stays sane.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🖥️</div>
+          <h3>Console per provider</h3>
+          <p>Open a scoped terminal for each profile without ever writing credentials to disk.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <span class="eyebrow">Download</span>
+      <h2>Get Skyveer for your OS.</h2>
+      <p class="lede">Grab the latest installer from the GitHub Releases page.</p>
+      <div class="downloads">
+        <a class="dl" href="https://github.com/juandl/skyveer/releases/latest" target="_blank" rel="noopener">
+          <div class="os">
+            <img src="assets/images/apple.png" alt="macOS" />
+          </div>
+          <div class="name">macOS</div>
+          <div class="kind">.dmg installer</div>
+        </a>
+        <a class="dl" href="https://github.com/juandl/skyveer/releases/latest" target="_blank" rel="noopener">
+          <div class="os">
+            <img src="assets/images/windows.png" alt="Windows" />
+          </div>
+          <div class="name">Windows</div>
+          <div class="kind">.exe installer</div>
+        </a>
+        <a class="dl" href="https://github.com/juandl/skyveer/releases/latest" target="_blank" rel="noopener">
+          <div class="os">
+            <img src="assets/images/linux.png" alt="Linux" />
+          </div>
+          <div class="name">Linux</div>
+          <div class="kind">.AppImage</div>
+        </a>
+      </div>
+
+      <div class="callout">
+        <div class="ico">🛡️</div>
+        <div>
+          <h3>Your keys never leave your machine.</h3>
+          <p>
+            All STS calls go directly to AWS. Profile data is stored in Electron's local app data directory —
+            no servers, no telemetry, no third parties.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© <span id="y"></span> Skyveer · Mozilla Public License 2.0</div>
+      <div>
+        <a href="https://github.com/juandl/skyveer" target="_blank" rel="noopener">GitHub</a> ·
+        <a href="https://github.com/juandl/skyveer/releases" target="_blank" rel="noopener">Releases</a> ·
+        <a href="https://github.com/juandl/skyveer/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+      <div class="disclaimer">
+        Skyveer is an independent open-source project and is <b>not affiliated with, endorsed by, or sponsored by</b>
+        Amazon Web Services, Google, Microsoft, Apple, or any other brand, product, or service mentioned on this page.
+        All trademarks, logos, and brand names are the property of their respective owners.
+      </div>
+    </footer>
+  </div>
+  <script>document.getElementById('y').textContent = String(new Date().getFullYear());</script>
+</body>
+</html>
